@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>안녕하세요, 곽동신입니다</title>
+    <style>
+        :root {
+            --primary-color: #2d3436;
+            --accent-color: #0984e3;
+            --bg-color: #f5f6fa;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        section {
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            border-left: 5px solid var(--accent-color);
+            padding-left: 15px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            color: var(--accent-color);
+        }
+
+        .contact-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .contact-list li {
+            margin-bottom: 12px;
+            font-size: 1.05rem;
+        }
+
+        .contact-list a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .contact-list a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #636e72;
+            margin-top: 50px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 20px;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>곽동신</h1>
+        <p class="tagline">데이터로 세상을 읽고 싶은 대학생</p>
+    </header>
+
+    <section id="about">
+        <h2>소개</h2>
+        <p>
+            안녕하세요! 저는 수원대학교에서 <strong>데이터 사이언스</strong>를 전공하고 있는 곽동신입니다.<br>
+            복잡한 데이터 속에서 의미 있는 인사이트를 찾아내는 과정에 매력을 느끼며,
+            현재 Python과 R을 활용한 데이터 분석 및 머신러닝 역량을 키워나가고 있습니다.
+        </p>
+    </section>
+
+    <section id="interests">
+        <h2>관심 분야</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>데이터 & 퀀트</h3>
+                <p>금융 데이터와 알고리즘 트레이딩에 관심이 많아 효율적인 투자 시스템을 고민합니다.</p>
+            </div>
+            <div class="card">
+                <h3>스포츠 & 분석</h3>
+                <p>야구(두산 베어스)의 열혈 팬이며, 세이버메트릭스 같은 기록 분석을 즐깁니다.</p>
+            </div>
+            <div class="card">
+                <h3>테크 & 모빌리티</h3>
+                <p>자율주행 기술과 전기차의 미래에 대해 깊은 흥미를 가지고 지켜보고 있습니다.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="hobbies">
+        <h2>라이프스타일</h2>
+        <p>
+            아침 수영으로 하루를 활기차게 시작하며, 재즈 음악(Bebop, Latin)을 감상하거나
+            직접 곡을 쓰는 활동을 통해 창의적인 영감을 얻기도 합니다.
+            MBTI는 <strong>ENTP</strong>로, 새로운 아이디어를 논의하고 도전하는 것을 좋아합니다.
+        </p>
+    </section>
+
+    <section id="contact">
+        <h2>Contact</h2>
+        <ul class="contact-list">
+            <li>📍 <strong>거주지:</strong> 경기도 안양시</li>
+            <li>📧 <strong>Email:</strong> <a href="mailto:dkmdkm999@naver.com">dkmdkm999@naver.com</a></li>
+            <li>🔗 <strong>GitHub:</strong> <a href="https://github.com/KWAKDONGSIN" target="_blank">KWAKDONGSIN</a></li>
+        </ul>
+    </section>
+
+    <footer>
+        <p>© 2026 Kwak Dong-shin. All rights reserved.</p>
+    </footer>
+</div>
+
+</body>
+</html>
