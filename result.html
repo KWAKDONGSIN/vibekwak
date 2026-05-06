@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>시간표 결과 — 수원대 스마트 시간표</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue: #3B82F6; --blue-dark: #2563EB; --blue-bg: #EFF6FF; --blue-mid: #DBEAFE;
+      --text-dark: #0F172A; --text-mid: #334155; --text-soft: #64748B;
+      --border: #E2E8F0; --white: #FFFFFF; --bg: #F8FAFF;
+    }
+    body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text-dark); min-height: 100vh; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
+
+    /* NAVBAR */
+    .navbar { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+    .navbar-inner { max-width: 1200px; margin: 0 auto; padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-mark { width: 34px; height: 34px; background: var(--blue); border-radius: 9px; display: grid; place-items: center; flex-shrink: 0; }
+    .logo-mark svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .logo-label { font-size: 16px; font-weight: 700; color: var(--text-dark); letter-spacing: -.4px; }
+    .logo-label em { font-style: normal; color: var(--blue); }
+    .nav-links { display: flex; align-items: center; gap: 24px; }
+    .nav-links a { font-size: 14px; font-weight: 500; color: var(--text-soft); text-decoration: none; transition: color .18s; }
+    .nav-links a:hover { color: var(--blue); }
+    .nav-cta { padding: 8px 18px; background: var(--blue); color: #fff !important; border-radius: 9px; font-weight: 600 !important; transition: background .18s !important; }
+    .nav-cta:hover { background: var(--blue-dark) !important; }
+
+    /* STEPPER */
+    .stepper-wrap { max-width: 680px; margin: 0 auto; padding: 32px 24px 0; }
+    .stepper { display: flex; align-items: center; }
+    .step-item { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; position: relative; }
+    .step-item:not(:last-child)::after { content: ''; position: absolute; top: 17px; left: 58%; width: 84%; height: 2px; background: var(--blue); z-index: 0; }
+    .step-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; z-index: 1; }
+    .step-circle.done { background: var(--blue); border: 2px solid var(--blue); color: #fff; }
+    .step-circle.active { background: #fff; border: 2px solid var(--blue); color: var(--blue); box-shadow: 0 0 0 5px var(--blue-mid); }
+    .step-label { font-size: 12px; font-weight: 600; color: var(--blue); }
+
+    /* PAGE HEADER */
+    .pg-header { max-width: 1200px; margin: 0 auto; padding: 28px 32px 0; }
+    .pg-title { font-size: 22px; font-weight: 800; letter-spacing: -.5px; }
+    .pg-sub { font-size: 14px; color: var(--text-soft); margin-top: 4px; }
+
+    /* PLAN TABS */
+    .plan-tabs { max-width: 1200px; margin: 0 auto; padding: 20px 32px 0; display: flex; gap: 10px; flex-wrap: wrap; }
+    .plan-tab { padding: 10px 22px; border-radius: 12px; border: 1.5px solid var(--border); background: #fff; font-size: 14px; font-weight: 600; color: var(--text-soft); cursor: pointer; transition: all .18s; display: flex; flex-direction: column; gap: 3px; font-family: 'Noto Sans KR', sans-serif; }
+    .plan-tab .tab-tag { font-size: 11px; font-weight: 500; }
+    .plan-tab.active { border-color: var(--blue); background: var(--blue-bg); color: var(--blue); }
+    .plan-tab:hover:not(.active) { border-color: var(--blue-mid); }
+
+    /* MAIN LAYOUT */
+    .main-layout { max-width: 1200px; margin: 0 auto; padding: 20px 32px 40px; display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start; }
+
+    /* TIMETABLE */
+    .tt-card { background: #fff; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .tt-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .tt-grid { display: grid; grid-template-columns: 54px repeat(5, 1fr); grid-template-rows: 44px repeat(9, 60px); min-width: 560px; }
+    .tt-corner { grid-column: 1; grid-row: 1; background: #F8FAFC; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .tt-dh { background: #F8FAFC; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--text-mid); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .tt-tl { background: #F8FAFC; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 9px; font-size: 12px; font-weight: 700; color: var(--text-soft); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .tt-tl span { font-size: 10px; color: #CBD5E1; font-weight: 400; margin-top: 1px; }
+    .tt-bg { background: #fff; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .tt-bg.lunch { background: #FFFBEB; }
+    .tt-course { margin: 3px; border-radius: 8px; padding: 7px 8px; overflow: hidden; cursor: pointer; transition: transform .14s, box-shadow .14s; z-index: 2; display: flex; flex-direction: column; gap: 2px; }
+    .tt-course:hover { transform: scale(1.04); box-shadow: 0 4px 16px rgba(0,0,0,.18); z-index: 3; }
+    .tt-cn { font-size: 12px; font-weight: 700; line-height: 1.3; }
+    .tt-cp { font-size: 10px; opacity: .75; margin-top: 1px; }
+    .tt-cr { font-size: 10px; opacity: .65; }
+
+    /* SIDEBAR */
+    .sidebar { display: flex; flex-direction: column; gap: 14px; }
+    .stat-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+    .sc-title { font-size: 13px; font-weight: 700; margin-bottom: 14px; }
+    .credit-total { text-align: center; padding: 12px 0 16px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+    .ct-num { font-size: 48px; font-weight: 900; color: var(--blue); line-height: 1; }
+    .ct-lbl { font-size: 12px; color: var(--text-soft); margin-top: 4px; }
+    .cr-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; font-size: 13px; border-bottom: 1px solid var(--border); }
+    .cr-row:last-child { border-bottom: none; }
+    .cr-left { display: flex; align-items: center; gap: 8px; color: var(--text-mid); }
+    .cr-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .cr-right { font-weight: 700; }
+    .info-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+    .ic-title { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+    .ic-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; }
+    .ic-k { color: var(--text-soft); }
+    .ic-v { font-weight: 600; }
+    .off-wrap { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+    .off-badge { padding: 3px 10px; border-radius: 999px; background: #ECFDF5; color: #059669; font-size: 11px; font-weight: 600; border: 1px solid #A7F3D0; }
+    .reason-box { margin-top: 12px; padding: 10px 12px; background: var(--blue-bg); border-radius: 10px; font-size: 12px; color: var(--text-soft); line-height: 1.65; }
+
+    /* COURSE TABLE */
+    .course-section { max-width: 1200px; margin: 0 auto 32px; padding: 0 32px; }
+    .cs-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; letter-spacing: -.3px; }
+    .course-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .course-table th { background: #F8FAFC; font-size: 12px; font-weight: 600; color: var(--text-soft); padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+    .course-table td { padding: 13px 16px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .course-table tr:last-child td { border-bottom: none; }
+    .course-table tr:hover td { background: #FAFAFA; }
+    .type-badge { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+    .tb-mr { background: #EFF6FF; color: #2563EB; }
+    .tb-ms { background: #F5F3FF; color: #7C3AED; }
+    .tb-lr { background: #F0FDF4; color: #16A34A; }
+    .tb-ls { background: #FFFBEB; color: #D97706; }
+
+    /* ACTION BAR */
+    .action-bar { max-width: 1200px; margin: 0 auto 60px; padding: 0 32px; display: flex; gap: 12px; }
+    .btn-save { padding: 14px 32px; background: var(--blue); color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background .18s, transform .15s; font-family: 'Noto Sans KR', sans-serif; }
+    .btn-save:hover { background: var(--blue-dark); transform: translateY(-2px); }
+    .btn-ghost { padding: 14px 24px; background: #fff; color: var(--text-soft); border: 1.5px solid var(--border); border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: border-color .18s, color .18s; font-family: 'Noto Sans KR', sans-serif; }
+    .btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
+
+    /* TOAST */
+    .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(16px); background: #0F172A; color: #fff; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 500; opacity: 0; transition: opacity .25s, transform .25s; z-index: 999; pointer-events: none; white-space: nowrap; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    footer { background: #fff; border-top: 1px solid var(--border); padding: 28px 32px; text-align: center; font-size: 12.5px; color: #94a3b8; line-height: 1.8; margin-top: auto; }
+    footer strong { color: var(--text-soft); }
+
+    @media (max-width: 960px) { .main-layout { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) {
+      .navbar-inner { padding: 0 16px; }
+      .nav-links a:not(.nav-cta) { display: none; }
+      .main-layout, .pg-header, .plan-tabs, .course-section, .action-bar { padding-left: 16px; padding-right: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a class="logo" href="index.html">
+      <div class="logo-mark"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="13" x2="16" y2="13" stroke-width="1.5"/><line x1="8" y1="17" x2="13" y2="17" stroke-width="1.5"/></svg></div>
+      <span class="logo-label"><em>수원대</em> 스마트 시간표</span>
+    </a>
+    <div class="nav-links">
+      <a href="rooms.html">빈 강의실</a>
+      <a href="graduation.html">졸업요건</a>
+      <a href="input.html" class="nav-cta">다시 만들기</a>
+    </div>
+  </div>
+</nav>
+
+<div class="stepper-wrap">
+  <div class="stepper">
+    <div class="step-item">
+      <div class="step-circle done">✓</div>
+      <div class="step-label">내 정보</div>
+    </div>
+    <div class="step-item">
+      <div class="step-circle done">✓</div>
+      <div class="step-label">조건 설정</div>
+    </div>
+    <div class="step-item">
+      <div class="step-circle active">3</div>
+      <div class="step-label">시간표 결과</div>
+    </div>
+  </div>
+</div>
+
+<div class="pg-header">
+  <div class="pg-title">추천 시간표 결과</div>
+  <div class="pg-sub">3가지 시간표를 비교하고 마음에 드는 것을 선택하세요</div>
+</div>
+
+<div class="plan-tabs">
+  <button class="plan-tab active" onclick="selectPlan(0)">시간표 1<span class="tab-tag">화·금 공강</span></button>
+  <button class="plan-tab" onclick="selectPlan(1)">시간표 2<span class="tab-tag">월·금 공강</span></button>
+  <button class="plan-tab" onclick="selectPlan(2)">시간표 3<span class="tab-tag">수요일 공강</span></button>
+</div>
+
+<div class="main-layout">
+  <div class="tt-card">
+    <div class="tt-scroll">
+      <div class="tt-grid" id="ttGrid"></div>
+    </div>
+  </div>
+  <div class="sidebar">
+    <div class="stat-card">
+      <div class="sc-title">이번 학기 학점</div>
+      <div class="credit-total">
+        <div class="ct-num" id="totalCr">0</div>
+        <div class="ct-lbl">신청 학점</div>
+      </div>
+      <div id="crBreakdown"></div>
+    </div>
+    <div class="info-card">
+      <div class="ic-title">시간표 정보</div>
+      <div id="planInfo"></div>
+    </div>
+  </div>
+</div>
+
+<div class="course-section">
+  <div class="cs-title">과목 목록</div>
+  <table class="course-table">
+    <thead><tr><th>과목명</th><th>교수</th><th>구분</th><th>학점</th><th>시간</th><th>강의실</th></tr></thead>
+    <tbody id="courseBody"></tbody>
+  </table>
+</div>
+
+<div class="action-bar">
+  <button class="btn-save" onclick="showToast('💾 시간표가 저장되었습니다!')">💾 이 시간표 저장하기</button>
+  <button class="btn-ghost" onclick="location.href='option.html'">← 조건 다시 설정</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer><strong>수원대 스마트 시간표</strong> · 수원대학교 비공식 서비스<br/>© 2025 All rights reserved.</footer>
+
+<script>
+const TIMES = ['9:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'];
+const DC = { mon:2, tue:3, wed:4, thu:5, fri:6 };
+const TI = {
+  mr: { label:'전공필수', cls:'tb-mr', color:'#3B82F6' },
+  ms: { label:'전공선택', cls:'tb-ms', color:'#7C3AED' },
+  lr: { label:'교양필수', cls:'tb-lr', color:'#16A34A' },
+  ls: { label:'교양선택', cls:'tb-ls', color:'#D97706' },
+};
+const PLANS = [
+  { tag:'화·금 공강', off:['화요일','금요일'], reason:'오전 9시 시작, 월·수·목만 등교하는 균형 잡힌 주간 구성',
+    courses:[
+      {n:'선형대수학',     p:'박서연',    cr:3, t:'mr', days:['mon','wed'], s:1, sp:2, room:'공학관 304'},
+      {n:'운영체제',       p:'김민준',    cr:3, t:'mr', days:['mon','wed'], s:3, sp:2, room:'정보과학관 301'},
+      {n:'데이터베이스',   p:'이지은',    cr:3, t:'mr', days:['mon','wed'], s:6, sp:2, room:'정보과학관 302'},
+      {n:'컴퓨터네트워크', p:'최준호',    cr:3, t:'ms', days:['thu'],       s:2, sp:3, room:'공학관 401'},
+      {n:'기술영어',       p:'Smith, J.', cr:2, t:'lr', days:['thu'],       s:6, sp:2, room:'인문사회관 201'},
+    ]},
+  { tag:'월·금 공강', off:['월요일','금요일'], reason:'화·수·목 집중 등교로 주초/주말 여유 극대화',
+    courses:[
+      {n:'알고리즘',       p:'정하준', cr:3, t:'mr', days:['tue','thu'], s:2, sp:2, room:'정보과학관 201'},
+      {n:'소프트웨어공학', p:'윤소희', cr:3, t:'ms', days:['tue','thu'], s:5, sp:2, room:'공학관 305'},
+      {n:'인공지능개론',   p:'강도현', cr:3, t:'ms', days:['wed'],       s:2, sp:3, room:'정보과학관 401'},
+      {n:'글쓰기와소통',   p:'임채원', cr:2, t:'lr', days:['wed'],       s:6, sp:2, room:'인문사회관 102'},
+      {n:'자료구조',       p:'오민성', cr:3, t:'mr', days:['tue','thu'], s:7, sp:2, room:'정보과학관 302'},
+    ]},
+  { tag:'수요일 공강', off:['수요일'], reason:'주 중 공강으로 과제·프로젝트 집중, 11시 이후 늦은 시작',
+    courses:[
+      {n:'컴파일러이론',   p:'배지수',    cr:3, t:'ms', days:['mon','tue'], s:3, sp:2, room:'공학관 302'},
+      {n:'임베디드시스템', p:'장현우',    cr:3, t:'ms', days:['thu','fri'], s:3, sp:2, room:'공학관 403'},
+      {n:'캡스톤디자인',   p:'김태훈',    cr:3, t:'mr', days:['mon'],       s:6, sp:3, room:'창의공학관 101'},
+      {n:'영어회화',       p:'Brown, S.', cr:2, t:'ls', days:['tue'],       s:6, sp:2, room:'인문사회관 203'},
+      {n:'모바일앱개발',   p:'신예진',    cr:3, t:'ms', days:['thu','fri'], s:6, sp:2, room:'정보과학관 402'},
+    ]},
+];
+
+function mk(cls) { const e = document.createElement('div'); e.className = cls; return e; }
+
+function buildGrid() {
+  const g = document.getElementById('ttGrid');
+  g.innerHTML = '';
+  const corner = mk('tt-corner'); g.appendChild(corner);
+  ['월','화','수','목','금'].forEach((d, i) => {
+    const h = mk('tt-dh'); h.style.cssText = `grid-column:${i+2};grid-row:1;`; h.textContent = d; g.appendChild(h);
+  });
+  TIMES.forEach((t, i) => {
+    const r = i + 2;
+    const tl = mk('tt-tl'); tl.style.cssText = `grid-column:1;grid-row:${r};`;
+    tl.innerHTML = `${i+1}<br><span>${t}</span>`; g.appendChild(tl);
+    for (let c = 2; c <= 6; c++) {
+      const bg = mk('tt-bg' + (i === 4 ? ' lunch' : '')); bg.style.cssText = `grid-column:${c};grid-row:${r};`; g.appendChild(bg);
+    }
+  });
+}
+
+function renderCourses(idx) {
+  document.querySelectorAll('.tt-course').forEach(e => e.remove());
+  const g = document.getElementById('ttGrid');
+  PLANS[idx].courses.forEach(c => {
+    const ti = TI[c.t];
+    c.days.forEach(day => {
+      const d = mk('tt-course');
+      d.style.cssText = `grid-column:${DC[day]};grid-row:${c.s+1}/${c.s+c.sp+1};background:${ti.color}1c;border-left:3px solid ${ti.color};color:${ti.color};`;
+      d.innerHTML = `<div class="tt-cn">${c.n}</div><div class="tt-cp">${c.p}</div><div class="tt-cr">${c.room}</div>`;
+      g.appendChild(d);
+    });
+  });
+}
+
+function updateSidebar(idx) {
+  const plan = PLANS[idx];
+  const total = plan.courses.reduce((s, c) => s + c.cr, 0);
+  document.getElementById('totalCr').textContent = total;
+  const groups = {};
+  plan.courses.forEach(c => { groups[c.t] = (groups[c.t] || 0) + c.cr; });
+  let h = '';
+  Object.entries(groups).forEach(([t, cr]) => {
+    const ti = TI[t];
+    h += `<div class="cr-row"><div class="cr-left"><div class="cr-dot" style="background:${ti.color}"></div>${ti.label}</div><div class="cr-right">${cr}학점</div></div>`;
+  });
+  document.getElementById('crBreakdown').innerHTML = h;
+  const ob = plan.off.map(o => `<span class="off-badge">${o}</span>`).join('');
+  document.getElementById('planInfo').innerHTML = `
+    <div class="ic-row"><span class="ic-k">총 학점</span><span class="ic-v">${total}학점</span></div>
+    <div class="ic-row"><span class="ic-k">과목 수</span><span class="ic-v">${plan.courses.length}과목</span></div>
+    <div class="ic-row" style="align-items:flex-start;padding-top:6px;"><span class="ic-k" style="padding-top:4px;">공강일</span><div class="off-wrap">${ob}</div></div>
+    <div class="reason-box">💡 ${plan.reason}</div>`;
+}
+
+function updateTable(idx) {
+  const DL = { mon:'월', tue:'화', wed:'수', thu:'목', fri:'금' };
+  let h = '';
+  PLANS[idx].courses.forEach(c => {
+    const ti = TI[c.t];
+    const ds = c.days.map(d => DL[d]).join('·');
+    const st = TIMES[c.s - 1];
+    const et = TIMES[Math.min(c.s + c.sp - 1, 8)];
+    h += `<tr><td style="font-weight:600;">${c.n}</td><td>${c.p}</td><td><span class="type-badge ${ti.cls}">${ti.label}</span></td><td>${c.cr}학점</td><td>${ds} ${st}~${et}</td><td style="color:var(--text-soft);font-size:12px;">${c.room}</td></tr>`;
+  });
+  document.getElementById('courseBody').innerHTML = h;
+}
+
+function selectPlan(idx) {
+  document.querySelectorAll('.plan-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  renderCourses(idx);
+  updateSidebar(idx);
+  updateTable(idx);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+buildGrid();
+selectPlan(0);
+</script>
+</body>
+</html>

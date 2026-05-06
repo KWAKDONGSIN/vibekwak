@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>수원대 스마트 시간표</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #f8faff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      width: 100%;
+      padding: 22px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #ffffff;
+      border-bottom: 1px solid #e8eef8;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: #3B82F6;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: #fff;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .logo-text {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1e293b;
+      letter-spacing: -0.3px;
+    }
+
+    .logo-text span {
+      color: #3B82F6;
+    }
+
+    nav {
+      display: flex;
+      gap: 32px;
+    }
+
+    nav a {
+      font-size: 14px;
+      font-weight: 500;
+      color: #64748b;
+      text-decoration: none;
+      transition: color .2s;
+    }
+
+    nav a:hover { color: #3B82F6; }
+
+    /* ── Hero ── */
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 24px 80px;
+    }
+
+    .hero {
+      text-align: center;
+      max-width: 700px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #3B82F6;
+      margin-bottom: 36px;
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      background: #3B82F6;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: .4; transform: scale(1.4); }
+    }
+
+    h1 {
+      font-size: clamp(38px, 6vw, 60px);
+      font-weight: 900;
+      color: #0f172a;
+      line-height: 1.16;
+      letter-spacing: -1.5px;
+      margin-bottom: 22px;
+    }
+
+    h1 .highlight {
+      color: #3B82F6;
+      position: relative;
+      display: inline-block;
+    }
+
+    h1 .highlight::after {
+      content: '';
+      position: absolute;
+      bottom: 3px;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: #dbeafe;
+      border-radius: 3px;
+      z-index: -1;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      font-weight: 400;
+      color: #64748b;
+      line-height: 1.75;
+      margin-bottom: 52px;
+    }
+
+    .subtitle strong {
+      color: #334155;
+      font-weight: 600;
+    }
+
+    /* ── Buttons ── */
+    .btn-group {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 34px;
+      border-radius: 14px;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      transition: transform .18s, box-shadow .18s, background .18s, border-color .18s, color .18s;
+      letter-spacing: -0.2px;
+    }
+
+    .btn:active { transform: scale(.96); }
+
+    .btn-primary {
+      background: #3B82F6;
+      color: #fff;
+      box-shadow: 0 4px 22px rgba(59,130,246,.38);
+    }
+
+    .btn-primary:hover {
+      background: #2563eb;
+      box-shadow: 0 8px 30px rgba(59,130,246,.48);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      color: #334155;
+      border: 1.5px solid #e2e8f0;
+      box-shadow: 0 2px 10px rgba(0,0,0,.05);
+    }
+
+    .btn-secondary:hover {
+      border-color: #3B82F6;
+      color: #3B82F6;
+      box-shadow: 0 4px 18px rgba(59,130,246,.15);
+      transform: translateY(-2px);
+    }
+
+    .btn-arrow {
+      font-size: 17px;
+      transition: transform .18s;
+    }
+
+    .btn:hover .btn-arrow { transform: translateX(4px); }
+
+    /* ── Feature Cards ── */
+    .features {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      margin-top: 72px;
+      flex-wrap: wrap;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #e8eef8;
+      border-radius: 18px;
+      padding: 26px 24px 22px;
+      width: 188px;
+      text-align: left;
+      box-shadow: 0 2px 14px rgba(0,0,0,.04);
+      transition: transform .2s, box-shadow .2s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 28px rgba(59,130,246,.13);
+    }
+
+    .card-icon {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 5px;
+    }
+
+    .card-desc {
+      font-size: 12px;
+      font-weight: 400;
+      color: #94a3b8;
+      line-height: 1.65;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+      color: #cbd5e1;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      header  { padding: 18px 20px; }
+      nav     { display: none; }
+      .card   { width: 145px; padding: 18px 16px; }
+      h1      { letter-spacing: -1px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── Header ─── -->
+  <header>
+    <a class="logo" href="#">
+      <div class="logo-icon">
+        <!-- Calendar icon -->
+        <svg viewBox="0 0 24 24">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="3"  y1="9"  x2="21" y2="9"/>
+          <line x1="8"  y1="2"  x2="8"  y2="6"/>
+          <line x1="16" y1="2"  x2="16" y2="6"/>
+          <circle cx="8"  cy="14" r=".8" fill="#fff" stroke="none"/>
+          <circle cx="12" cy="14" r=".8" fill="#fff" stroke="none"/>
+          <circle cx="16" cy="14" r=".8" fill="#fff" stroke="none"/>
+          <circle cx="8"  cy="18" r=".8" fill="#fff" stroke="none"/>
+          <circle cx="12" cy="18" r=".8" fill="#fff" stroke="none"/>
+        </svg>
+      </div>
+      <span class="logo-text"><span>수원대</span> 스마트 시간표</span>
+    </a>
+    <nav>
+      <a href="#">공지사항</a>
+      <a href="#">이용 가이드</a>
+      <a href="#">문의하기</a>
+    </nav>
+  </header>
+
+  <!-- ─── Hero ─── -->
+  <main>
+    <div class="hero">
+
+      <div class="badge">
+        <span class="badge-dot"></span>
+        2025학년도 2학기 · 수강신청 준비 중
+      </div>
+
+      <h1>
+        내 학점에 딱 맞는<br />
+        <span class="highlight">스마트 시간표</span>
+      </h1>
+
+      <p class="subtitle">
+        <strong>졸업요건 분석</strong>부터 <strong>공강 최대화</strong>까지<br />
+        수원대 학생을 위한 시간표 설계 도우미
+      </p>
+
+      <div class="btn-group">
+        <a href="#" class="btn btn-primary">
+          시간표 만들기
+          <span class="btn-arrow">→</span>
+        </a>
+        <a href="#" class="btn btn-secondary">
+          빈 강의실 찾기
+          <span class="btn-arrow">→</span>
+        </a>
+      </div>
+
+      <!-- Feature cards -->
+      <div class="features">
+        <div class="card">
+          <div class="card-icon">🎓</div>
+          <div class="card-title">졸업요건 분석</div>
+          <div class="card-desc">필수·선택 이수<br />현황을 한눈에</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">⚡</div>
+          <div class="card-title">공강 최대화</div>
+          <div class="card-desc">최적 조합으로<br />여유 시간 확보</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🏫</div>
+          <div class="card-title">빈 강의실 탐색</div>
+          <div class="card-desc">실시간 공강<br />강의실 조회</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">📊</div>
+          <div class="card-title">학점 시뮬레이션</div>
+          <div class="card-desc">학기별 이수<br />계획 미리보기</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ─── Footer ─── -->
+  <footer>
+    © 2025 수원대 스마트 시간표 · 수원대학교 비공식 서비스
+  </footer>
+
+</body>
+</html>
