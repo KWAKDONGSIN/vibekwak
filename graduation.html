@@ -107,6 +107,28 @@
     footer { background: #fff; border-top: 1px solid var(--border); padding: 28px 32px; text-align: center; font-size: 12.5px; color: #94a3b8; line-height: 1.8; margin-top: auto; }
     footer strong { color: var(--text-soft); }
 
+    /* PREREQUISITES */
+    .prereq-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    .prereq-card { background: #fff; border: 1.5px solid var(--border); border-radius: 14px; padding: 18px 20px; transition: border-color .18s, transform .18s; }
+    .prereq-card:hover { transform: translateY(-2px); }
+    .prereq-card.can-take { border-color: #A7F3D0; }
+    .prereq-card.cannot-take { border-color: #FECACA; }
+    .prereq-card.done { opacity: .6; }
+    .pc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .pc-name { font-size: 15px; font-weight: 700; letter-spacing: -.3px; }
+    .pc-cr { font-size: 12px; font-weight: 600; color: var(--text-soft); }
+    .pc-status { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .status-can { background: #ECFDF5; color: #059669; }
+    .status-cannot { background: #FEF2F2; color: #EF4444; }
+    .status-done { background: #F1F5F9; color: #64748B; }
+    .status-taking { background: #FFFBEB; color: #D97706; }
+    .pc-prereqs { display: flex; flex-wrap: wrap; gap: 6px; }
+    .prereq-tag { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; border: 1px solid; }
+    .pt-done { background: #F0FDF4; color: #16A34A; border-color: #A7F3D0; }
+    .pt-todo { background: #FEF2F2; color: #EF4444; border-color: #FECACA; }
+    .pt-none { background: var(--blue-bg); color: var(--blue); border-color: var(--blue-mid); font-style: italic; }
+    .no-prereq-label { font-size: 12px; color: var(--text-soft); font-style: italic; }
+
     @media (max-width: 900px) {
       .charts-grid { grid-template-columns: repeat(3, 1fr); }
       .checklist-grid { grid-template-columns: 1fr; }
@@ -195,11 +217,27 @@
     <div class="recommend-grid" id="recommendGrid"></div>
   </div>
 
+  <!-- 선수과목 안내 -->
+  <div>
+    <div class="section-header">
+      <div class="section-title">선수과목 안내</div>
+      <div class="section-sub" id="prereqSub">수강 가능 여부를 선수과목 기준으로 확인하세요</div>
+    </div>
+    <div class="prereq-grid" id="prereqGrid"></div>
+  </div>
+
 </div>
 
 <footer><strong>수원대 스마트 시간표</strong> · 수원대학교 비공식 서비스<br/>© 2025 All rights reserved.</footer>
 
 <script>
+/* ─ localStorage에서 학생 정보 읽기 ─ */
+const savedCollege  = localStorage.getItem('sw_college') || '지능형SW융합대학';
+const savedDept     = localStorage.getItem('sw_dept')    || '컴퓨터학부';
+const savedMajor    = localStorage.getItem('sw_major')   || '';
+const savedGrade    = localStorage.getItem('sw_grade')   || '3';
+const finalDept     = localStorage.getItem('sw_final_dept') || savedDept;
+
 /* ─ 데이터 ─ */
 const CATEGORIES = [
   { name:'전공필수', done:33, total:45, color:'#3B82F6' },
@@ -340,11 +378,123 @@ function renderRecommends() {
   document.getElementById('recommendGrid').innerHTML = h;
 }
 
+/* ─ 선수과목 데이터 ─ */
+const PREREQ_MAP = {
+  '컴퓨터학부':   [
+    { course:'C프로그래밍',       prereqs:[],                                   cr:3, st:'done' },
+    { course:'객체지향프로그래밍', prereqs:['C프로그래밍'],                      cr:3, st:'done' },
+    { course:'이산수학',           prereqs:[],                                   cr:3, st:'done' },
+    { course:'자료구조',           prereqs:['C프로그래밍','객체지향프로그래밍'],  cr:3, st:'done' },
+    { course:'알고리즘',           prereqs:['자료구조','이산수학'],               cr:3, st:'done' },
+    { course:'컴퓨터구조',         prereqs:['이산수학'],                          cr:3, st:'todo' },
+    { course:'운영체제',           prereqs:['자료구조','컴퓨터구조'],             cr:3, st:'done' },
+    { course:'데이터베이스',       prereqs:['자료구조'],                          cr:3, st:'done' },
+    { course:'선형대수학',         prereqs:[],                                   cr:3, st:'taking'},
+    { course:'컴파일러이론',       prereqs:['이산수학','알고리즘'],               cr:3, st:'todo' },
+    { course:'인공지능개론',       prereqs:['선형대수학','확률과통계'],           cr:3, st:'todo' },
+    { course:'소프트웨어공학',     prereqs:['자료구조','객체지향프로그래밍'],     cr:3, st:'todo' },
+    { course:'캡스톤디자인',       prereqs:['소프트웨어공학'],                    cr:3, st:'todo' },
+    { course:'컴퓨터네트워크',     prereqs:['운영체제'],                          cr:3, st:'todo' },
+  ],
+  '컴퓨터SW전공': [
+    { course:'웹프로그래밍',       prereqs:['객체지향프로그래밍'],               cr:3, st:'done' },
+    { course:'모바일앱개발',       prereqs:['객체지향프로그래밍','자료구조'],     cr:3, st:'todo' },
+    { course:'클라우드컴퓨팅',     prereqs:['운영체제','컴퓨터네트워크'],         cr:3, st:'todo' },
+    { course:'소프트웨어테스팅',   prereqs:['소프트웨어공학'],                    cr:3, st:'todo' },
+    { course:'오픈소스SW',         prereqs:['운영체제'],                          cr:3, st:'done' },
+  ],
+  '미디어SW전공': [
+    { course:'디지털미디어론',     prereqs:[],                                   cr:3, st:'done' },
+    { course:'영상처리',           prereqs:['선형대수학','자료구조'],             cr:3, st:'todo' },
+    { course:'게임프로그래밍',     prereqs:['객체지향프로그래밍','자료구조'],     cr:3, st:'todo' },
+    { course:'UX디자인',           prereqs:['디지털미디어론'],                    cr:3, st:'done' },
+    { course:'증강현실개론',       prereqs:['영상처리'],                          cr:3, st:'todo' },
+  ],
+  '데이터과학부': [
+    { course:'통계학개론',         prereqs:[],                                   cr:3, st:'done' },
+    { course:'확률과통계',         prereqs:['통계학개론'],                        cr:3, st:'done' },
+    { course:'머신러닝',           prereqs:['선형대수학','확률과통계'],           cr:3, st:'todo' },
+    { course:'딥러닝',             prereqs:['머신러닝'],                          cr:3, st:'todo' },
+    { course:'데이터분석',         prereqs:['통계학개론','자료구조'],             cr:3, st:'taking'},
+    { course:'빅데이터처리',       prereqs:['데이터분석'],                        cr:3, st:'todo' },
+  ],
+  '정보통신전공': [
+    { course:'전기전자공학기초',   prereqs:[],                                   cr:3, st:'done' },
+    { course:'신호와시스템',       prereqs:['전기전자공학기초'],                  cr:3, st:'done' },
+    { course:'디지털통신',         prereqs:['신호와시스템'],                      cr:3, st:'todo' },
+    { course:'무선통신',           prereqs:['디지털통신'],                        cr:3, st:'todo' },
+    { course:'네트워크보안',       prereqs:['컴퓨터네트워크'],                   cr:3, st:'todo' },
+  ],
+  '경영전공': [
+    { course:'경영학원론',         prereqs:[],                                   cr:3, st:'done' },
+    { course:'회계원리',           prereqs:[],                                   cr:3, st:'done' },
+    { course:'마케팅관리론',       prereqs:['경영학원론'],                        cr:3, st:'done' },
+    { course:'재무관리',           prereqs:['회계원리','경영학원론'],             cr:3, st:'todo' },
+    { course:'경영전략',           prereqs:['마케팅관리론','경영학원론'],         cr:3, st:'todo' },
+    { course:'인적자원관리',       prereqs:['경영학원론'],                        cr:3, st:'taking'},
+  ],
+};
+
+/* ─ 선수과목 렌더링 ─ */
+function renderPrereqs() {
+  const key = savedMajor || savedDept;
+  const data = PREREQ_MAP[key] || PREREQ_MAP[savedDept] || PREREQ_MAP['컴퓨터학부'];
+  const doneSet = new Set(data.filter(c => c.st === 'done').map(c => c.course));
+
+  document.getElementById('prereqSub').textContent =
+    `${key} — 수강 가능 여부를 선수과목 기준으로 확인하세요`;
+
+  let h = '';
+  data.forEach(item => {
+    const allPreDone = item.prereqs.every(p => doneSet.has(p));
+    let cardCls = 'prereq-card';
+    let statusCls = '', statusLabel = '';
+
+    if (item.st === 'done') {
+      cardCls += ' done'; statusCls = 'status-done'; statusLabel = '✓ 이수 완료';
+    } else if (item.st === 'taking') {
+      cardCls += ' can-take'; statusCls = 'status-taking'; statusLabel = '▶ 수강 중';
+    } else if (allPreDone) {
+      cardCls += ' can-take'; statusCls = 'status-can'; statusLabel = '수강 가능';
+    } else {
+      cardCls += ' cannot-take'; statusCls = 'status-cannot'; statusLabel = '선수과목 필요';
+    }
+
+    const prereqTags = item.prereqs.length === 0
+      ? '<span class="prereq-tag pt-none">선수과목 없음</span>'
+      : item.prereqs.map(p => {
+          const done = doneSet.has(p);
+          return `<span class="prereq-tag ${done ? 'pt-done' : 'pt-todo'}">${done ? '✓' : '✗'} ${p}</span>`;
+        }).join('');
+
+    h += `
+      <div class="${cardCls}">
+        <div class="pc-header">
+          <div class="pc-name">${item.course}</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="pc-cr">${item.cr}학점</div>
+            <div class="pc-status ${statusCls}">${statusLabel}</div>
+          </div>
+        </div>
+        <div class="pc-prereqs">${prereqTags}</div>
+      </div>`;
+  });
+  document.getElementById('prereqGrid').innerHTML = h;
+}
+
 /* ─ 초기화 ─ */
+/* 학생 정보 배너 동적 업데이트 */
+const collegShort = savedCollege.replace('대학','');
+const gradeLabel  = savedGrade ? `${savedGrade}학년` : '3학년';
+const deptShort   = savedMajor || savedDept;
+document.querySelector('.sb-student').textContent =
+  `${collegShort} · ${gradeLabel}${deptShort ? ' · ' + deptShort : ''}`;
+
 renderCharts();
 renderProgress();
 renderChecklist();
 renderRecommends();
+renderPrereqs();
 
 /* 애니메이션 */
 requestAnimationFrame(() => {

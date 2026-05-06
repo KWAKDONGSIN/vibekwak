@@ -527,6 +527,20 @@
     /* ══════════════════════════════
        RESPONSIVE
     ══════════════════════════════ */
+    /* ══════════════════════════════
+       CASCADE SELECT FIELDS
+    ══════════════════════════════ */
+    .cascade-field {
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height .35s cubic-bezier(.4,0,.2,1), opacity .28s;
+    }
+    .cascade-field.visible {
+      max-height: 140px;
+      opacity: 1;
+    }
+
     @media (max-width: 560px) {
       .page { padding: 28px 16px 60px; }
       .card-body { padding: 16px 18px 22px; }
@@ -595,17 +609,31 @@
       </div>
       <div class="card-body">
 
-        <!-- 학과 -->
+        <!-- 대학/학부/전공 3단계 캐스케이딩 -->
         <div class="field">
-          <label class="field-label" for="dept">학과 선택<span class="req">*</span></label>
-          <select id="dept" name="dept">
-            <option value="" disabled selected>학과를 선택하세요</option>
-            <option value="ai">AI데이터사이언스학과</option>
-            <option value="cs">컴퓨터학부</option>
-            <option value="biz">경영학과</option>
-            <option value="ee">전자공학부</option>
-            <option value="chem">화학공학과</option>
-            <option value="etc">기타 학과</option>
+          <label class="field-label" for="college">대학 선택<span class="req">*</span></label>
+          <select id="college" name="college" onchange="onCollegeChange()">
+            <option value="" disabled selected>대학을 선택하세요</option>
+            <option>인문사회융합대학</option>
+            <option>경영공학대학</option>
+            <option>혁신공과대학</option>
+            <option>지능형SW융합대학</option>
+            <option>라이프케어사이언스대학</option>
+            <option>디자인앤아트대학</option>
+            <option>음악테크놀로지대학</option>
+            <option>문화예술융합대학</option>
+          </select>
+        </div>
+        <div class="field cascade-field" id="deptField">
+          <label class="field-label" id="deptLabel" for="dept">학부/학과 선택<span class="req">*</span></label>
+          <select id="dept" name="dept" onchange="onDeptChange()">
+            <option value="" disabled selected>학부/학과를 선택하세요</option>
+          </select>
+        </div>
+        <div class="field cascade-field" id="majorField">
+          <label class="field-label" for="major">전공 선택<span class="req">*</span></label>
+          <select id="major" name="major">
+            <option value="" disabled selected>전공을 선택하세요</option>
           </select>
         </div>
 
@@ -763,21 +791,98 @@
   </div><!-- /page -->
 
   <script>
+    /* ── 대학 데이터 ── */
+    const UNI_DATA = {
+      '인문사회융합대학': ['한국언어문화전공','디지털헤리티지전공','영미언어문화전공','러시아언어문화전공','일본언어문화전공','중국언어문화전공','법학전공','행정학전공','미디어커뮤니케이션전공','소방행정전공'],
+      '경영공학대학': {
+        '경제학부': ['경제금융전공','국제개발협력전공'],
+        '경영학부': ['경영전공','회계전공','글로벌비즈니스전공'],
+        '호텔관광학부': ['호텔경영전공','외식경영전공','관광경영전공'],
+      },
+      '혁신공과대학': {
+        '바이오화학산업학부': ['바이오공학 및 마케팅전공','융합화학산업전공'],
+        '건설환경에너지공학부': ['건설환경공학전공','환경에너지공학전공'],
+        '건축도시부동산학부': ['건축학전공','도시부동산학전공'],
+        '산업 및 기계공학부': ['산업공학전공','기계공학전공'],
+        '반도체공학과': [],
+        '전기전자공학부': ['전기공학전공','전자공학전공'],
+        '화학공학·신소재공학부': ['신소재공학전공','화학공학전공'],
+      },
+      '지능형SW융합대학': {
+        '데이터과학부': [],
+        '컴퓨터학부': ['컴퓨터SW전공','미디어SW전공'],
+        '정보통신학부': ['정보통신전공','정보보호전공'],
+      },
+      '라이프케어사이언스대학': {
+        '간호학과': [], '아동가족복지학과': [], '의류학과': [], '식품영양학과': [],
+        '스포츠과학부': ['체육학전공','레저스포츠전공','운동건강관리전공'],
+      },
+      '디자인앤아트대학': {
+        '조형예술학부': ['회화전공(서양화, 한국화)','조소전공'],
+        '디자인학부': ['커뮤니케이션디자인전공','패션디자인전공','공예디자인전공'],
+      },
+      '음악테크놀로지대학': {
+        '아트앤테크놀로지작곡과': [], '성악과': [], '피아노과': [], '관현악과': [], '국악과': [],
+      },
+      '문화예술융합대학': {
+        '아트앤엔터테인먼트학부': ['영화예술전공','연기예술전공','디지털콘텐츠전공'],
+      },
+    };
+
+    /* ── 대학 변경 ── */
+    function onCollegeChange() {
+      const college = document.getElementById('college').value;
+      const deptSel = document.getElementById('dept');
+      const deptField = document.getElementById('deptField');
+      const majorField = document.getElementById('majorField');
+      const deptLabel = document.getElementById('deptLabel');
+
+      deptSel.innerHTML = '<option value="" disabled selected>선택하세요</option>';
+      document.getElementById('major').innerHTML = '<option value="" disabled selected>전공을 선택하세요</option>';
+      majorField.classList.remove('visible');
+
+      const data = UNI_DATA[college];
+      if (!data) { deptField.classList.remove('visible'); return; }
+
+      if (Array.isArray(data)) {
+        deptLabel.innerHTML = '전공 선택<span class="req">*</span>';
+        data.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; deptSel.appendChild(o); });
+      } else {
+        deptLabel.innerHTML = '학부/학과 선택<span class="req">*</span>';
+        Object.keys(data).forEach(d => { const o = document.createElement('option'); o.value = d; o.textContent = d; deptSel.appendChild(o); });
+      }
+      deptField.classList.add('visible');
+    }
+
+    /* ── 학부 변경 ── */
+    function onDeptChange() {
+      const college = document.getElementById('college').value;
+      const dept = document.getElementById('dept').value;
+      const majorSel = document.getElementById('major');
+      const majorField = document.getElementById('majorField');
+
+      majorSel.innerHTML = '<option value="" disabled selected>전공을 선택하세요</option>';
+      const data = UNI_DATA[college];
+      if (!data || Array.isArray(data)) { majorField.classList.remove('visible'); return; }
+
+      const majors = data[dept];
+      if (!majors || majors.length === 0) { majorField.classList.remove('visible'); return; }
+
+      majors.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; majorSel.appendChild(o); });
+      majorField.classList.add('visible');
+    }
+
     /* ── 편입생 토글 ── */
     const radios = document.querySelectorAll('input[name="admit"]');
     const extra  = document.getElementById('transferExtra');
-
     radios.forEach(r => r.addEventListener('change', () => {
-      const isTransfer = document.getElementById('admit-transfer').checked;
-      extra.classList.toggle('visible', isTransfer);
+      extra.classList.toggle('visible', document.getElementById('admit-transfer').checked);
     }));
 
     /* ── 숫자 스텝 버튼 ── */
     function stepNum(id, delta) {
       const el = document.getElementById(id);
-      const min = Number(el.min ?? 0);
-      const max = Number(el.max ?? Infinity);
-      el.value  = Math.min(max, Math.max(min, Number(el.value) + delta));
+      el.value = Math.min(Number(el.max ?? Infinity), Math.max(Number(el.min ?? 0), Number(el.value) + delta));
       el.dispatchEvent(new Event('input'));
     }
 
@@ -787,31 +892,40 @@
       document.getElementById(barId).style.width = (val / max * 100) + '%';
     }
 
-    /* ── 다음 단계 유효성 검사 ── */
+    /* ── 다음 단계 유효성 + localStorage 저장 ── */
     function goNext() {
-      const dept  = document.getElementById('dept').value;
-      const grade = document.getElementById('grade').value;
-      if (!dept)  { shake('dept');  return; }
-      if (!grade) { shake('grade'); return; }
+      const college = document.getElementById('college').value;
+      const grade   = document.getElementById('grade').value;
+      const dept    = document.getElementById('dept').value;
+      const major   = document.getElementById('major').value;
+      const deptVisible  = document.getElementById('deptField').classList.contains('visible');
+      const majorVisible = document.getElementById('majorField').classList.contains('visible');
+
+      if (!college)              { shake('college'); return; }
+      if (deptVisible && !dept)  { shake('dept');    return; }
+      if (majorVisible && !major){ shake('major');   return; }
+      if (!grade)                { shake('grade');   return; }
+
+      localStorage.setItem('sw_college', college);
+      localStorage.setItem('sw_dept',    dept || '');
+      localStorage.setItem('sw_major',   major || '');
+      localStorage.setItem('sw_grade',   grade);
+      const finalDept = major || dept || college;
+      localStorage.setItem('sw_final_dept', finalDept);
+
       window.location.href = 'option.html';
     }
 
     function shake(id) {
       const el = document.getElementById(id);
+      if (!el) return;
       el.style.borderColor = '#EF4444';
       el.style.boxShadow   = '0 0 0 3px rgba(239,68,68,.2)';
       el.animate([
-        { transform: 'translateX(0)' },
-        { transform: 'translateX(-6px)' },
-        { transform: 'translateX(6px)' },
-        { transform: 'translateX(-4px)' },
-        { transform: 'translateX(4px)' },
-        { transform: 'translateX(0)' },
-      ], { duration: 320, easing: 'ease-in-out' });
-      setTimeout(() => {
-        el.style.borderColor = '';
-        el.style.boxShadow   = '';
-      }, 1600);
+        {transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},
+        {transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'translateX(0)'},
+      ], {duration:320, easing:'ease-in-out'});
+      setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 1600);
       el.focus();
     }
   </script>

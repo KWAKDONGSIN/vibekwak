@@ -118,6 +118,19 @@
     footer { background: #fff; border-top: 1px solid var(--border); padding: 28px 32px; text-align: center; font-size: 12.5px; color: #94a3b8; line-height: 1.8; margin-top: auto; }
     footer strong { color: var(--text-soft); }
 
+    /* CREDIT TARGET BAR */
+    .ctb { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+    .ctb-inner { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .ctb-label { font-size: 13px; font-weight: 700; color: var(--text-dark); white-space: nowrap; }
+    .ctb-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ctb-btn { padding: 7px 18px; border-radius: 9px; border: 1.5px solid var(--border); background: #fff; font-size: 13px; font-weight: 600; color: var(--text-soft); cursor: pointer; transition: all .16s; font-family: 'Noto Sans KR', sans-serif; }
+    .ctb-btn:hover:not(.active) { border-color: var(--blue-mid); color: var(--blue); }
+    .ctb-btn.active { border-color: var(--blue); background: var(--blue-bg); color: var(--blue); }
+    .ctb-hint { font-size: 12px; color: var(--text-soft); margin-left: auto; }
+    .ctb-hint.ok { color: #16A34A; font-weight: 600; }
+    .ctb-hint.over { color: #D97706; font-weight: 600; }
+    .ctb-hint.short { color: var(--blue); font-weight: 600; }
+
     @media (max-width: 960px) { .main-layout { grid-template-columns: 1fr; } }
     @media (max-width: 600px) {
       .navbar-inner { padding: 0 16px; }
@@ -168,6 +181,19 @@
   <button class="plan-tab active" onclick="selectPlan(0)">시간표 1<span class="tab-tag">화·금 공강</span></button>
   <button class="plan-tab" onclick="selectPlan(1)">시간표 2<span class="tab-tag">월·금 공강</span></button>
   <button class="plan-tab" onclick="selectPlan(2)">시간표 3<span class="tab-tag">수요일 공강</span></button>
+</div>
+
+<div class="ctb" style="margin-top:16px;">
+  <div class="ctb-inner">
+    <span class="ctb-label">목표 학점</span>
+    <div class="ctb-btns">
+      <button class="ctb-btn" onclick="setTarget(12)">12학점</button>
+      <button class="ctb-btn" onclick="setTarget(15)">15학점</button>
+      <button class="ctb-btn active" onclick="setTarget(18)">18학점</button>
+      <button class="ctb-btn" onclick="setTarget(21)">21학점</button>
+    </div>
+    <span class="ctb-hint" id="ctbHint"></span>
+  </div>
 </div>
 
 <div class="main-layout">
@@ -245,6 +271,25 @@ const PLANS = [
     ]},
 ];
 
+let cur = 0;
+let targetCr = parseInt(localStorage.getItem('sw_target_credits') || '18');
+
+function setTarget(n) {
+  targetCr = n;
+  localStorage.setItem('sw_target_credits', n);
+  document.querySelectorAll('.ctb-btn').forEach((b, i) => b.classList.toggle('active', [12,15,18,21][i] === n));
+  updateCtbHint();
+}
+
+function updateCtbHint() {
+  const total = PLANS[cur].courses.reduce((s, c) => s + c.cr, 0);
+  const diff  = total - targetCr;
+  const hint  = document.getElementById('ctbHint');
+  if (diff === 0) { hint.textContent = `현재 ${total}학점 = 목표 달성!`; hint.className = 'ctb-hint ok'; }
+  else if (diff > 0) { hint.textContent = `현재 ${total}학점 — 목표보다 ${diff}학점 초과`; hint.className = 'ctb-hint over'; }
+  else { hint.textContent = `현재 ${total}학점 — 목표보다 ${Math.abs(diff)}학점 부족`; hint.className = 'ctb-hint short'; }
+}
+
 function mk(cls) { const e = document.createElement('div'); e.className = cls; return e; }
 
 function buildGrid() {
@@ -312,10 +357,12 @@ function updateTable(idx) {
 }
 
 function selectPlan(idx) {
+  cur = idx;
   document.querySelectorAll('.plan-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
   renderCourses(idx);
   updateSidebar(idx);
   updateTable(idx);
+  updateCtbHint();
 }
 
 function showToast(msg) {
@@ -326,6 +373,7 @@ function showToast(msg) {
 
 buildGrid();
 selectPlan(0);
+document.querySelectorAll('.ctb-btn').forEach((b, i) => b.classList.toggle('active', [12,15,18,21][i] === targetCr));
 </script>
 </body>
 </html>
